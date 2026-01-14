@@ -22,7 +22,7 @@ import CreateTemplateModal from "./CreateTemplateModal"
 import SearchModal from "./SearchModal"
 import SettingsPopover from "./SettingsPopover"
 import { cls } from "./utils"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 export default function Sidebar({
   open,
@@ -54,6 +54,18 @@ export default function Sidebar({
   const [showCreateTemplateModal, setShowCreateTemplateModal] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState(null)
   const [showSearchModal, setShowSearchModal] = useState(false)
+  const [isDesktop, setIsDesktop] = useState(() => {
+    if (typeof window === "undefined") return false
+    return window.matchMedia("(min-width: 768px)").matches
+  })
+
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 768px)")
+    const update = (event) => setIsDesktop(event.matches)
+    update(media)
+    media.addEventListener("change", update)
+    return () => media.removeEventListener("change", update)
+  }, [])
 
   const handleSearchClick = () => {
     setShowSearchModal(true)
@@ -203,7 +215,7 @@ export default function Sidebar({
   return (
     <>
       <AnimatePresence>
-        {open && (
+        {open && !isDesktop && (
           <motion.div
             key="overlay"
             initial={{ opacity: 0 }}
@@ -216,11 +228,11 @@ export default function Sidebar({
       </AnimatePresence>
 
       <AnimatePresence>
-        {(open || typeof window !== "undefined") && (
+        {(open || isDesktop) && (
           <motion.aside
             key="sidebar"
-            initial={{ x: -340 }}
-            animate={{ x: open ? 0 : 0 }}
+            initial={{ x: isDesktop ? 0 : -340 }}
+            animate={{ x: isDesktop || open ? 0 : -340 }}
             exit={{ x: -340 }}
             transition={{ type: "spring", stiffness: 260, damping: 28 }}
             className={cls(
